@@ -77,7 +77,7 @@ app.get("/*", function(request, response) {
 
         var display = {
             "Normal_URL": url,
-            "Shortened_URL": key
+            "Shortened_URL": "https://fcc-url-short-ms.herokuapp.com/" + key
         }
         
         response.send(display);
