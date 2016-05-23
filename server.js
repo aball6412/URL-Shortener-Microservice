@@ -24,28 +24,18 @@ app.use("/", express.static(__dirname + "/public"));
 //Initialize the database connection once
  MongoClient.connect(dburl, function(err, db) {
         if (err) {
-            console.log("Unable to connect to database.");
+            console.log("Unable to connect to database: " + dburl);
             throw err;
         }
         
         else {
-            console.log("Connection successful.");
+            console.log("Connection successful to: " + dburl);
             
             collection = db.collection("url");
             
-      
         }
 
 }); //End of database connection
-
-
-
-//Display homepage screen 
-//app.get("/", function(request, response) {
-//    
-//    response.send();
-//    
-//});
 
 
 //Display original and shortened URL after parameter is passed
@@ -58,25 +48,21 @@ app.get("/*", function(request, response) {
     //Check to see if URL is valid or not
     if (validator.isURL(url)) {
         
-        
-            //Check the db to see if it's been used and if not insert
-            var match = "yes";
-
-            
             //Create random shortener key
             var key = Math.floor(Math.random() * (10001 - 1) + 1);
 
 
             collection.find({ short: key }).toArray(function(err, documents) {
 
-
+                if(err) throw err;
+                
                 if (documents.length >= 1) {
                     
                     console.log("That key has already been used"); 
                     
                 }
                 else {
-                    match = "no";
+ 
                     collection.insert(
                         {
                             "original": url,
@@ -90,8 +76,8 @@ app.get("/*", function(request, response) {
         
 
         var display = {
-            "Normal URL": url,
-            "Shortened URL": key
+            "Normal_URL": url,
+            "Shortened_URL": key
         }
         
         response.send(display);
@@ -99,13 +85,41 @@ app.get("/*", function(request, response) {
     } //End big if statement
     
     else {
-
-        var display = {
-            "Error": "URL is invalid"
-        }
+        // Since not a valid URL check to see if valid short URL
+        var key = Number(request.params[0]);
         
-        response.send(display);
-    }
+        collection.find({ short: key }).toArray(function(err, documents) {
+            
+            if(err) throw err;
+            
+            //If there is a database match then redirect to URL
+            if (documents.length >= 1) {
+               
+                var redirectUrl = documents[0].original;
+                var check = redirectUrl.slice(0, 4);
+                
+                //Make sure that http is prefix so we can properly redirect
+                if (check != "http") {
+                    redirectUrl = "http://" + redirectUrl;
+                }
+                  
+                response.redirect(redirectUrl);
+
+            }
+            
+            else {
+                
+                var display = {
+                    "Error": "URL is invalid"
+                }
+                
+                response.send(display);
+                
+            } //End else
+            
+        }); //End db query
+ 
+    } //End big else
     
     
     
