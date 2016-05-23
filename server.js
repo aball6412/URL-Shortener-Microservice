@@ -43,6 +43,10 @@ app.get("/*", function(request, response) {
 
     //Get the parameter (which is everything after the first slash no matter the character "/*")
     var url = request.params["0"];
+    
+    if (url === "favicon.ico") {
+        url = null;
+    }
 
     
     //Check to see if URL is valid or not
